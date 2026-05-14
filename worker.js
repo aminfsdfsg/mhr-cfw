@@ -6,26 +6,29 @@ export default {
       const url = body.u;
       const method = body.m || "GET";
       const headers = body.h || {};
-      const redirect = body.r === false ? "manual" : "follow";
 
-      const options = {
+      const resp = await fetch(url, {
         method,
         headers,
-        redirect
-      };
+        body: body.b || undefined,
+        redirect: body.r === false ? "manual" : "follow"
+      });
 
-      if (body.b) {
-        options.body = body.b;
+      const arr = await resp.arrayBuffer();
+
+      let binary = "";
+      const bytes = new Uint8Array(arr);
+
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
 
-      const resp = await fetch(url, options);
-
-      const text = await resp.text();
+      const b64 = btoa(binary);
 
       return Response.json({
         s: resp.status,
         h: Object.fromEntries(resp.headers),
-        b: text
+        b: b64
       });
 
     } catch (e) {
